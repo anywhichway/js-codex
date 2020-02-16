@@ -11,7 +11,7 @@ function Codex() {
 			Array: async (data,options) => data.reduce(async (accum,item) => { accum = await accum; accum.push(await codex.decode(item,options)); return accum; },[]),
 			BigInt: (data) => BigInt(data),
 			BigInt64Array: (data) => BigInt64Array.from(data),
-			BigUInt64Array: (data) => BigUInt64Array.from(data),
+			BigUint64Array: (data) => BigUint64Array.from(data),
 			Date: (data) => new Date(parseInt(data)),
 			Float32Array: (data) => Float32Array.from(data),
 			Float64Array: (data) => Float64Array.from(data),
@@ -48,7 +48,7 @@ function Codex() {
 				bigint: (data) => `BigInt@${data}`,
 				BigInt: (data) => `BigInt@${data}`,
 				BigInt64Array: (data) => ["BigInt64Array@",data.reduce((accum,item) => { accum.push(`${item}`); return accum; },[])],
-				BigUInt64Array: (data) => ["BigUInt64Array@",data.reduce((accum,item) => { accum.push(`${item}`); return accum; },[])],
+				BigUint64Array: (data) => ["BigUint64Array@",data.reduce((accum,item) => { accum.push(`${item}`); return accum; },[])],
 				Date: (data) => `Date@${data.getTime()}`,
 				Float32Array: (data) => ["Float32Array@",data.reduce(reduceArray,[])],
 				Float64Array: (data) => ["Float64Array@",data.reduce(reduceArray,[])],
@@ -68,6 +68,7 @@ function Codex() {
 				Uint8Array: (data) => ["Uint8Array@",data.reduce(reduceArray,[])],
 				Uint8ClampedArray: (data) => ["Uint8ClampedArray@",data.reduce(reduceArray,[])],
 				Uint16Array: (data) => ["Uint16Array@",data.reduce(reduceArray,[])],
+				Uint32Array: (data) => ["Uint32Array@",data.reduce(reduceArray,[])],
 				undefined: () => "undefined@",
 			};
 	

@@ -1,18 +1,24 @@
 {
   "name": "js-codex",
   "description": "Encode and decode modern JavaScript, e.g. Map, Set, for JSON.stringify and JSON.parse.",
-  "version": "0.0.2a",
+  "version": "0.0.3a",
+  "license": "MIT",
   "contributors": [
     {
       "name": "Simon Y. Blackwell",
       "email": "syblackwell@anywhichway.com"
     }
   ],
-  "scripts": {},
-  "devDependencies": {},
+  "scripts": {
+  	
+  },
+  "devDependencies": {
+    "chai": "^4.2.0",
+    "codacy-coverage": "^3.4.0",
+    "codeclimate-test-reporter": "^0.5.1",
+    "mocha": "^7.0.1"
+  },
   "dependencies": {},
-  "keywords": [
-
-  ],
+  "keywords": [],
   "readmeFilename": "README.md"
 }
