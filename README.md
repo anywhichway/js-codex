@@ -108,6 +108,8 @@ for the ids, e.g. the `references` object populated by `encode`.
 
 # Release History (reverse chronologicla order)
 
+2020-02-16 v0.0.2a ALPHA Corrected typo in declare function signature.
+
 2020-02-16 v0.0.1a ALPHA Initial public release
 
 
