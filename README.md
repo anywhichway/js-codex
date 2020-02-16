@@ -106,6 +106,10 @@ specified with `encode`.
 Typically, this will be a database getter. Or, an object, the keys of which are unique object ids and the values are objects to substitute
 for the ids, e.g. the `references` object populated by `encode`.
 
+# License
+
+MIT
+
 # Release History (reverse chronologicla order)
 
 2020-02-16 v0.0.2a ALPHA Corrected typo in declare function signature.
