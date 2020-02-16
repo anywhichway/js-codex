@@ -153,7 +153,7 @@ function Codex() {
 					}
 					return Object.assign(Object.create(ctor.prototype),data);
 				};
-			codex.register({name,encode,decode});
+			codex.register({ctor,encode,decode});
 			data = encode(data,{idProperty,hiddenProperties,references});
 		}
 		if(data && type==="object") {
@@ -181,7 +181,8 @@ function Codex() {
 		return data;
 	}});
 	
-	Object.defineProperty(this,"register",{configurable:true,writable:true,value:({name,encode,decode,create}) => {
+	Object.defineProperty(this,"register",{configurable:true,writable:true,value:({ctor,name=cor.name,encode,decode,create}) => {
+		ctors[name] = ctor;
 		encoders[name] = encode;
 		decoders[name] = decode;
 		creators[name] = create;
