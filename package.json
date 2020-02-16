@@ -1,0 +1,18 @@
+{
+  "name": "js-codex",
+  "description": "Encode and decode modern JavaScript, e.g. Map, Set, for JSON.stringify and JSON.parse.",
+  "version": "0.0.1a",
+  "contributors": [
+    {
+      "name": "Simon Y. Blackwell",
+      "email": "syblackwell@anywhichway.com"
+    }
+  ],
+  "scripts": {},
+  "devDependencies": {},
+  "dependencies": {},
+  "keywords": [
+
+  ],
+  "readmeFilename": "README.md"
+}

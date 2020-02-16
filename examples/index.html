@@ -1,0 +1,42 @@
+<html>
+<head>
+</head>
+<body>
+<script type="module">
+	import {Codex} from "../js-codex.js";
+
+	const codex = new Codex(),
+		Person = function(config={}) {
+			Object.assign(this,config);
+			Object.defineProperty(this,"^",{value:Object.assign({},config["^"])});
+			if(!this["#"]) {
+				this["#"] = `Person@${Math.random()}`; // good enough for demo
+			}
+			if(!this["^"].createdAt) {
+				this["^"].createdAt = new Date();
+			}
+		},
+		data = {
+			anUndefined: undefined,
+			aBoolean: true,
+			aNumber: 1,
+			aString: "a string",
+			aDate: new Date(),
+			aBigInt: BigInt("9007199254740991"),
+			aCustomObject: new Person({name:"joe"}),
+			aSet: [1,NaN,Infinity,undefined].reduce((accum,value) => accum.add(value),new Set()),
+			aMap: [["a",1],["b",NaN],["c",Infinity],["d",undefined],[{name:"test"},{name:"test"}]].reduce((accum,[key,value]) => accum.set(key,value),new Map()),
+			anInt8Array: Int8Array.from([1,2,3]),
+			aBigInt64Array: BigInt64Array.from([9007199254740991n,"9007199254740991"])
+		};
+	navigator.geolocation.getCurrentPosition(async (location) => {
+		const references = {};
+		data.aGeolocation = location;
+		const encoded = codex.encode(data,{idProperty:"#",references,hiddenProperties:["^"]});
+		console.log(encoded);
+		console.log(await codex.decode(JSON.parse(JSON.stringify(encoded)),{references}));
+	});
+	
+</script>
+</body>
+</html>
