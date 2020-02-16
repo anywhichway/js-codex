@@ -1,16 +1,16 @@
 # js-codex
 
-Encode and decode modern JavaScript, e.g. Map, Set, for JSON.stringify and JSON.parse.
+Encode and decode modern JavaScript, e.g. Map, Set, NaN, Infinity, typed Arrays for JSON.stringify and JSON.parse.
 
 `JSON.stringify` and `JSON.parse` are of high utility for serializing JSON data and restoring it for later use. However,
 they were both designed prior to the introduction of a large number of JavaScript objects that do not serialize and
 subsequently restore well, i.e. `Set`, `Map`, all of the typed arrays like `Int8Array`. Additionally, `JSON.stringify`
 loses semantic information unless `toJSON` methods are implemented for each class. The `js-codex` library solves this
-problem and supports serializaton preparation for all native JavaScript classes and custom classes without semantic loss.
+problem and supports serializaton preparation for all native JavaScript classes and learns custom classes without semantic loss.
 
 # Usage
 
-Here is an example that covers many special JavaScript classes and a custom class:
+Here is an example that covers many special JavaScript cases and classes as well as a custom class:
 
 ```
 <script type="module">
@@ -92,15 +92,18 @@ Encodes the data so it can be serialized using `JSON.stringify`. Supports circul
 
 `references` - An object, the entries of which will be unique object ids and objects when `encode` returns.
 
-## decode(data,{isReference,references}={})
+## async decode(data,{isReference,references}={})
+
+Decodes data. It is asynchronous because decoding data will frequently require asynchronous retrieval of referenced objects form a database
+based on their ids.
 
 `data` - The data to decode. Can be anything.
 
 `isReference(value)` - A function that returns truthy if the value passed is an object reference, i.e. an id pulled from the `idProperty` field
 specified with `encode`.
 
-`references` - Either a function or an object. If a function, when passed a unique object id will return the object. It may be asynchronous. 
-Typically, this will be a database getter. Or, an object, the keys of which are unique object ids and the values, the objects to substitute
+`references` - Either a function or an object. If a function, when passed a unique object id it should return the object. It may be asynchronous. 
+Typically, this will be a database getter. Or, an object, the keys of which are unique object ids and the values are objects to substitute
 for the ids, e.g. the `references` object populated by `encode`.
 
 # Release History (reverse chronologicla order)
