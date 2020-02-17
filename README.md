@@ -1,12 +1,17 @@
 # js-codex
 
-Encode and decode modern JavaScript, e.g. Map, Set, NaN, Infinity, typed Arrays for JSON.stringify and JSON.parse.
+Encode and decode modern JavaScript, e.g. Map, Set, NaN, Infinity, typed Arrays for `JSON.stringify` and `JSON.parse`.
 
 `JSON.stringify` and `JSON.parse` are of high utility for serializing JSON data and restoring it for later use. However,
 they were both designed prior to the introduction of a large number of JavaScript objects that do not serialize and
-subsequently restore well, i.e. `Set`, `Map`, all of the typed arrays like `Int8Array`. Additionally, `JSON.stringify`
-loses semantic information unless `toJSON` methods are implemented for each class. The `js-codex` library solves this
-problem and supports serializaton preparation for all native JavaScript classes and learns custom classes without semantic loss.
+subsequently restore well, i.e. `Set`, `Map`, `URL`, `BigInt`, `GeolocationCoordinates`, `GeolocationPosition` and 
+all of the typed arrays like `Int8Array`.
+
+The library also handles a number of items that have never been addressed well by `JSON.stringify` and `JSON.parse`: 
+`Infinity`, `-Infinity`, `NaN`, `undefined`.
+
+Finally, `JSON.stringify` loses semantic information unless `toJSON` methods are implemented for each class. The `js-codex` library solves this
+problem and supports serializaton preparation for all native JavaScript classes and automatically learns custom classes without semantic loss.
 
 # Usage
 
@@ -94,7 +99,7 @@ Encodes the data so it can be serialized using `JSON.stringify`. Supports circul
 
 ## async decode(data,{isReference,references}={})
 
-Decodes data. It is asynchronous because decoding data will frequently require asynchronous retrieval of referenced objects form a database
+Decodes data. It is asynchronous because decoding data will frequently require asynchronous retrieval of referenced objects from a database
 based on their ids.
 
 `data` - The data to decode. Can be anything.
@@ -111,6 +116,8 @@ for the ids, e.g. the `references` object populated by `encode`.
 MIT
 
 # Release History (reverse chronologicla order)
+
+2020-02-17 v0.0.4a ALPHA Added `URL` as an ecodable class. Added unit tests.
 
 2020-02-16 v0.0.3a ALPHA Fixed issues with BigInt Arrays and Uint32Array. Added unit tests.
 

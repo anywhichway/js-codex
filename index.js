@@ -31,6 +31,7 @@ function Codex() {
 			Uint16Array: (data) => Uint16Array.from(data),
 			Uint32Array: (data) => Uint16Array.from(data),
 			undefined: () => undefined,
+			URL: (data) => new URL(data)
 		},
 		encode = (object,options) => {
 			const hidden = {};
@@ -69,10 +70,11 @@ function Codex() {
 				Uint8ClampedArray: (data) => ["Uint8ClampedArray@",data.reduce(reduceArray,[])],
 				Uint16Array: (data) => ["Uint16Array@",data.reduce(reduceArray,[])],
 				Uint32Array: (data) => ["Uint32Array@",data.reduce(reduceArray,[])],
+				URL: (data) => `URL@${data.href}`,
 				undefined: () => "undefined@",
 			};
 	
-	Object.defineProperty(this,"decode",{configurable:true,writable:true,value:async (data,{isReference=(id) => typeof(id)==="string" && id.split("@").length===2 && ctors[id.split("@")[0]],references}={}) => {
+	Object.defineProperty(this,"decode",{configurable:true,writable:true,value:async (data,{isReference=(id) => typeof(id)==="string" && id.split("@").length===2 && ctors[id.split("@")[0]],hiddenProperties=[],references}={}) => {
 		const type = typeof(data);
 		let key, value;
 		if(type==="string") {
@@ -82,7 +84,13 @@ function Codex() {
 					return references(data);
 				}
 				if(references && type==="object" && references[data]) {
-					return references[data];
+					data = references[data];
+					for(const property of hiddenProperties) {
+						const value = data[property];
+						if(value!==undefined) {
+							Object.defineProperty(data,property,{enumerable:false,configurable:true,writable:true,value:await codex.decode(value,{isReference,hiddenProperties,references})});
+						}
+					}
 				}
 			}
 			if(data.includes("@")) {
@@ -96,7 +104,7 @@ function Codex() {
 			if(typeof(key)==="string" && key.includes("@")) {
 				[key] = key.split("@");
 			} else {
-				return data.reduce(async (accum,item) => { accum = await accum; accum.push(await codex.decode(item,{isReference,references})); return accum;},[])
+				return data.reduce(async (accum,item) => { accum = await accum; accum.push(await codex.decode(item,{isReference,hiddenProperties,references})); return accum;},[])
 			}
 		} else if(data && type==="object") {
 			key = data.constructor.name;
@@ -105,11 +113,11 @@ function Codex() {
 		if(key) {
 			const decoder = decoders[key]||(data && type==="object" ? (data.decode ? data.decode.bind(data) : (data.constructor.decode ? data.constructor.decode.bind(data.constructor) : null)) : null);
 			if(decoder) {
-				return decoder(Array.isArray(value) ? value[0] : value,{isReference,references});
+				return decoder(Array.isArray(value) ? value[0] : value,{isReference,hiddenProperties,references});
 			}
 			const create = creators[key];
 			if(create) {
-				value = Object.keys(data).reduce(async (accum,key) => { accum = await accum; accum[key] = await codex.decode(data[key],{isReference,references}); return accum; },Array.isArray(data) ? [] : {})
+				value = Object.keys(data).reduce(async (accum,key) => { accum = await accum; accum[key] = await codex.decode(data[key],{isReference,hiddenProperties,references}); return accum; },Array.isArray(data) ? [] : {})
 				return create(value);
 			}
 		}
@@ -138,21 +146,29 @@ function Codex() {
 			// create default decoder and encoder
 			const ctor = data.constructor,
 				name = ctor.name,
-				decode = (data,{isReference,references}) => {
+				decode = async (data,{isReference,hiddenProperties,references}) => {
 					if(isReference(data)) {
 						const type = typeof(references);
 						if(type==="function") {
 							return references(type);
 						}
-						if(data && type==="object") {
-							return references[data];
+						if(data && type==="object" && references[data]) {
+							data = references[data];
+						} else {
+							return data;
 						}
-						return data;
 					}
 					if(ctor.create) {
 						return ctor.create(data);
 					}
-					return Object.assign(Object.create(ctor.prototype),data);
+					data = Object.assign(Object.create(ctor.prototype),data);
+					for(const property of hiddenProperties) {
+						const value = data[property];
+						if(value!==undefined) {
+							Object.defineProperty(data,property,{enumerable:false,configurable:true,writable:true,value:await codex.decode(value,{isReference,hiddenProperties,references})});
+						}
+					}
+					return data;
 				};
 			codex.register({ctor,encode,decode});
 			data = encode(data,{idProperty,hiddenProperties,references});

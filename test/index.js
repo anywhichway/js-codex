@@ -98,4 +98,58 @@ describe("Test",function() {
 			expect(base.every((item,i) => decoded[i]===item)).equal(true);
 		});
 	});
+	it("Set", async function() {
+		const base = [1,NaN,Infinity,undefined,{name:"joe"}],
+			set = base.reduce((accum,value) => accum.add(value),new Set()),
+			encoded = codex.encode(set),
+			decoded = await codex.decode(encoded);
+		expect(encoded[1].length).equal(base.length);
+		expect(decoded.size).equal(base.length);
+		let i = 0;
+		for(const item of decoded) {
+			expect(JSON.stringify(item)).equal(JSON.stringify(base[i]));
+			i++;
+		}
+	});
+	it("Map", async function() {
+		const base = [1,{name:"joe"}],
+			map = base.reduce((accum,value) => accum.set(value,value),new Map()),
+			encoded = codex.encode(map),
+			decoded = await codex.decode(encoded);
+		expect(encoded[1].length).equal(base.length);
+		expect(decoded.size).equal(base.length);
+		let i = 0;
+		for(const [key,value] of decoded) {
+			expect(JSON.stringify(value)).equal(JSON.stringify(base[i]));
+			i++;
+		}
+	});
+	it("URL", async function() {
+		const url = new URL(window.location.href),
+			encoded = codex.encode(url),
+			decoded = await codex.decode(encoded);
+		expect(encoded).equal(`URL@${window.location.href}`);
+		expect(decoded.href).equal(window.location.href);
+	});
+	it("Custom Object", async function() {
+		function Person(config={}) {
+			Object.assign(this,config);
+			Object.defineProperty(this,"^",{value:Object.assign({},config["^"])});
+			if(!this["#"]) {
+				this["#"] = `Person@${Math.random()}`; // good enough for demo
+			}
+			if(!this["^"].createdAt) {
+				this["^"].createdAt = new Date();
+			}
+		};
+		const person = new Person({name:"joe"}),
+			references = {},
+			hiddenProperties = ["^"],
+			encoded = codex.encode(person,{idProperty:"#",hiddenProperties,references}),
+			decoded = await codex.decode(encoded,{references,hiddenProperties});
+		expect(decoded["#"]).equal(person["#"]);
+		expect(decoded["^"].createdAt.getTime()).equal(person["^"].createdAt.getTime());
+		expect(decoded instanceof Person).equal(true);
+		expect(Object.getOwnPropertyDescriptor(decoded,"^").enumerable).equal(false);
+	});
 });
