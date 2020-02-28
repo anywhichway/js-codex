@@ -16,94 +16,107 @@ describe("Test",function() {
 		codex = new Codex();
 	});
 	it("boolean - false", async function() {
-		const encoded = codex.encode(false),
-			decoded = await codex.decode(encoded);
-		expect(encoded).equal(false);
+		const {kind,data} = codex.encode(false),
+			decoded = await codex.decode({kind,data});
+		expect(kind).equal("boolean");
+		expect(data).equal(false);
 		expect(decoded).equal(false);
 	});
 	it("boolean - true", async function() {
-		const encoded = codex.encode(true),
-			decoded = await codex.decode(encoded);
-		expect(encoded).equal(true);
+		const {kind,data} = codex.encode(true),
+		decoded = await codex.decode({kind,data});
+		expect(kind).equal("boolean");
+		expect(data).equal(true);
 		expect(decoded).equal(true);
 	});
 	it("number", async function() {
-		const encoded = codex.encode(1),
-			decoded = await codex.decode(encoded);
-		expect(encoded).equal(1);
+		const {kind,data} = codex.encode(1),
+			decoded = await codex.decode({kind,data});
+		expect(kind).equal("number");
+		expect(data).equal(1);
 		expect(decoded).equal(1);
 	});
 	it("string", async function() {
-		const encoded = codex.encode("a string"),
-			decoded = await codex.decode(encoded);
-		expect(encoded).equal("a string");
+		const {kind,data}  = codex.encode("a string"),
+			decoded = await codex.decode({kind,data} );
+		expect(kind).equal("string");
+		expect(data).equal("a string");
 		expect(decoded).equal("a string");
 	});
 	it("undefined", async function() {
-		const encoded = codex.encode(),
-			decoded = await codex.decode(encoded);
-		expect(encoded).equal("undefined@");
+		const {kind,data} = codex.encode(),
+			decoded = await codex.decode({kind,data});
+		expect(kind).equal("undefined");
+		expect(data).equal(undefined);
 		expect(decoded).equal(undefined);
 	});
+	it("bigint", async function() {
+		const {kind,data}  = codex.encode(9007199254740991n),
+			decoded = await codex.decode({kind,data} );
+		expect(kind).equal("bigint");
+		expect(data).equal(9007199254740991n);
+		expect(decoded).equal(9007199254740991n);
+	});
 	it("Infinity", async function() {
-		const encoded = codex.encode(Infinity),
-			decoded = await codex.decode(encoded);
-		expect(encoded).equal("Infinity@");
+		const {kind,data}  = codex.encode(Infinity),
+			decoded = await codex.decode({kind,data});
+		expect(kind).equal("Infinity");
+		expect(data).equal(undefined);
 		expect(decoded).equal(Infinity);
 	});
 	it("-Infinity", async function() {
-		const encoded = codex.encode(-Infinity),
-			decoded = await codex.decode(encoded);
-		expect(encoded).equal("-Infinity@");
+		const {kind,data} = codex.encode(-Infinity),
+			decoded = await codex.decode({kind,data});
+		expect(kind).equal("-Infinity");
+		expect(data).equal(undefined);
 		expect(decoded).equal(-Infinity);
 	});
 	it("NaN", async function() {
-		const encoded = codex.encode(NaN),
-			decoded = await codex.decode(encoded);
-		expect(encoded).equal("NaN@");
+		const {kind,data} = codex.encode(NaN),
+			decoded = await codex.decode({kind,data});
+		expect(kind).equal("NaN");
+		expect(data).equal(undefined);
 		expect(decoded+"").equal("NaN");
 	});
 	it("Date", async function() {
 		const now = new Date(),
-			encoded = codex.encode(now),
-			decoded = await codex.decode(encoded);
-		expect(encoded.startsWith("Date@")).equal(true);
+			{kind,data}  = codex.encode(now),
+			decoded = await codex.decode({kind,data} );
+		expect(kind).equal("Date");
+		expect(data).equal(now.getTime());
 		expect(decoded.getTime()).equal(now.getTime());
-	});
-	it("BigInt", async function() {
-		const encoded = codex.encode(9007199254740991n),
-			decoded = await codex.decode(encoded);
-		expect(encoded).equal("BigInt@9007199254740991");
-		expect(decoded).equal(9007199254740991n);
 	});
 	[Int8Array,Uint8Array,Uint8ClampedArray,Int16Array,Uint16Array,Int32Array,Uint32Array,Float32Array,Float64Array].forEach((array) => {
 		it(array.name, async function() {
 			const base = [1,2,3],
-				encoded = codex.encode(array.from(base)),
-				decoded = await codex.decode(encoded);
-			expect(Array.isArray(encoded)).equal(true);
-			expect(encoded[1].length).equal(3);
-			expect(encoded[1].every((item,i) => base[i]===item)).equal(true);
+				{kind,data}  = codex.encode(array.from(base)),
+				decoded = await codex.decode({kind,data} );
+			expect(kind).equal(array.name);
+			expect(Array.isArray(data)).equal(true);
+			expect(data.length).equal(3);
+			expect(data.every((item,i) => base[i]===item)).equal(true);
 			expect(base.every((item,i) => decoded[i]===item)).equal(true);
 		});
 	});
 	[BigInt64Array,BigUint64Array].forEach((array) => {
 		it(array.name, async function() {
 			const base = [1n,2n,3n],
-				encoded = codex.encode(array.from(base)),
-				decoded = await codex.decode(encoded);
-			expect(Array.isArray(encoded)).equal(true);
-			expect(encoded[1].length).equal(3);
-			expect(encoded[1].every((item,i) => base[i]+""===item)).equal(true);
+				{kind,data} = codex.encode(array.from(base)),
+				decoded = await codex.decode({kind,data}  );
+			expect(kind).equal(array.name);
+			expect(Array.isArray(data)).equal(true);
+			expect(data.length).equal(3);
+			expect(data.every((item,i) => base[i]+""===item)).equal(true);
 			expect(base.every((item,i) => decoded[i]===item)).equal(true);
 		});
 	});
 	it("Set", async function() {
 		const base = [1,NaN,Infinity,undefined,{name:"joe"}],
 			set = base.reduce((accum,value) => accum.add(value),new Set()),
-			encoded = codex.encode(set),
-			decoded = await codex.decode(encoded);
-		expect(encoded[1].length).equal(base.length);
+			{kind,data} = codex.encode(set),
+			decoded = await codex.decode({kind,data});
+		expect(kind).equal("Set");	
+		expect(data.length).equal(base.length);
 		expect(decoded.size).equal(base.length);
 		let i = 0;
 		for(const item of decoded) {
@@ -114,9 +127,10 @@ describe("Test",function() {
 	it("Map", async function() {
 		const base = [1,{name:"joe"}],
 			map = base.reduce((accum,value) => accum.set(value,value),new Map()),
-			encoded = codex.encode(map),
-			decoded = await codex.decode(encoded);
-		expect(encoded[1].length).equal(base.length);
+			{kind,data} = codex.encode(map),
+			decoded = await codex.decode({kind,data});
+		expect(kind).equal("Map");
+		expect(data.length).equal(base.length);
 		expect(decoded.size).equal(base.length);
 		let i = 0;
 		for(const [key,value] of decoded) {
@@ -126,9 +140,10 @@ describe("Test",function() {
 	});
 	it("URL", async function() {
 		const url = new URL(window.location.href),
-			encoded = codex.encode(url),
-			decoded = await codex.decode(encoded);
-		expect(encoded).equal(`URL@${window.location.href}`);
+			{kind,data}  = codex.encode(url),
+			decoded = await codex.decode({kind,data} );
+		expect(kind).equal("URL");
+		expect(data).equal(window.location.href);
 		expect(decoded.href).equal(window.location.href);
 	});
 	it("Custom Object", async function() {
@@ -145,8 +160,10 @@ describe("Test",function() {
 		const person = new Person({name:"joe"}),
 			references = {},
 			hiddenProperties = ["^"],
-			encoded = codex.encode(person,{idProperty:"#",hiddenProperties,references}),
-			decoded = await codex.decode(encoded,{references,hiddenProperties});
+			idProperty = "#",
+			{kind,data} = codex.encode(person,{idProperty,hiddenProperties,references}),
+			decoded = await codex.decode({kind,data},{references,idProperty,hiddenProperties});
+		expect(kind).equal("Person");
 		expect(decoded["#"]).equal(person["#"]);
 		expect(decoded["^"].createdAt.getTime()).equal(person["^"].createdAt.getTime());
 		expect(decoded instanceof Person).equal(true);

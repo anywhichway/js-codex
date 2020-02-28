@@ -97,12 +97,14 @@ Encodes the data so it can be serialized using `JSON.stringify`. Supports circul
 
 `references` - An object, the entries of which will be unique object ids and objects when `encode` returns.
 
-## async decode(data,{isReference,references}={})
+## async decode(data,{idProperty,isReference,references}={})
 
 Decodes data. It is asynchronous because decoding data will frequently require asynchronous retrieval of referenced objects from a database
 based on their ids.
 
 `data` - The data to decode. Can be anything.
+
+`idProperty` - Optional. The key in which unique object identifiers are stored, e.g. `_id` or `#`.
 
 `isReference(value)` - A function that returns truthy if the value passed is an object reference, i.e. an id pulled from the `idProperty` field
 specified with `encode`.
@@ -117,7 +119,9 @@ MIT
 
 # Release History (reverse chronologicla order)
 
-2020-02-17 v0.0.4a ALPHA Added `URL` as an ecodable class. Added unit tests.
+2020-02-28 v0.0.5a ALPHA Reworked internals to simplify.
+
+2020-02-17 v0.0.4a ALPHA Added `URL` as an encodable class. Added unit tests.
 
 2020-02-16 v0.0.3a ALPHA Fixed issues with BigInt Arrays and Uint32Array. Added unit tests.
 
