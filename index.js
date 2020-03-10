@@ -17,6 +17,7 @@ function Codex() {
 			Date: (data) => new Date(parseInt(data)),
 			Float32Array: (data) => Float32Array.from(data),
 			Float64Array: (data) => Float64Array.from(data),
+			function: (data) => Function("return " + data)(),
 			GeolocationCoordinates: (data) => codex.decode(data),
 			GeolocationPosition: (data) => codex.decode(data),
 			"-Infinity": () => -Infinity,
@@ -96,6 +97,7 @@ function Codex() {
 				Date: (data) => data.getTime(),
 				Float32Array: (data) => data.reduce(reduceArray,[]),
 				Float64Array: (data) => data.reduce(reduceArray,[]),
+				function: (data) => data+"",
 				GeolocationCoordinates: (data) => codex.encode({latitude:data.latitude,longitude:data.longitude,altitude:data.alitude,accuracy:data.accuracy,altitudeAccuracy:data.altitudeAccuracy,heading:data.heading,speed:data.speed}),
 				GeolocationPosition: (data) => codex.encode({coords:data.coords,timestamp:data.timestamp}),
 				"-Infinity": () => undefined,
@@ -116,7 +118,7 @@ function Codex() {
 				URL: (data) => data.href,
 				undefined: () => undefined
 			};
-	Object.defineProperty(this,"decode",{configurable:true,writable:true,value:async ({kind,data},{isReference=_isReference,idProperty,hiddenProperties=[],references}={}) => {
+	Object.defineProperty(this,"decode",{configurable:true,writable:true,value:async ({kind,data},{isReference=_isReference,idProperty,hiddenProperties=[],references,functions}={}) => {
 		const type = typeof(data),
 			reference = isReference(data),
 			referencestype = typeof(references),
@@ -134,7 +136,7 @@ function Codex() {
 			}
 		}
 		const decoder = decoders[kind]||(data && type==="object" ? (data.decode ? data.decode.bind(data) : (data.constructor.decode ? data.constructor.decode.bind(data.constructor) : null)) : null);
-		if(decoder) {
+		if(decoder && (kind!=="function" || functions)) {
 			decoded = await decoder(data,{isReference,hiddenProperties,references});
 		} else {
 			if(data && type==="object") {
@@ -153,7 +155,7 @@ function Codex() {
 		return decoded;
 	}});
 
-	Object.defineProperty(this,"encode",{configurable:true,writable:true,value:(data,{isReference=_isReference,idProperty,hiddenProperties=[],references}={}) => {
+	Object.defineProperty(this,"encode",{configurable:true,writable:true,value:(data,{isReference=_isReference,idProperty,hiddenProperties=[],references,functions}={}) => {
 		if(idProperty && !references) {
 			throw new Error(`call of 'encode' was made with a idProperty="${idProperty}" but no references object`);
 		}
@@ -164,7 +166,7 @@ function Codex() {
 			kind = encoders[data] ? data+"" : (data && type==="object" ? data.constructor.name : type);
 		let encoded,
 			encoder = encoders[kind]||(data && type==="object" ? (data.encode ? data.encode.bind(data) : (data.constructor.encode ? data.constructor.encode.bind(data.constructor) : null)) : null);
-		if(encoder) {
+		if(encoder && (type!=="function" || functions)) {
 			encoded = {kind,data:encoder(data,{idProperty,hiddenProperties,references})};
 		} else if(data && type==="object") {
 			// create default decoder and encoder

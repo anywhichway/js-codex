@@ -7,15 +7,16 @@ they were both designed prior to the introduction of a large number of JavaScrip
 subsequently restore well, i.e. `Set`, `Map`, `URL`, `BigInt`, `GeolocationCoordinates`, `GeolocationPosition` and 
 all of the typed arrays like `Int8Array`.
 
-The library also handles a number of items that have never been addressed well by `JSON.stringify` and `JSON.parse`: 
-`Infinity`, `-Infinity`, `NaN`, `undefined`.
+`Js-codex` also handles a number of items that have never been addressed well by `JSON.stringify` and `JSON.parse`: 
+`Infinity`, `-Infinity`, `NaN`, `undefined`, functions.
 
 Finally, `JSON.stringify` loses semantic information unless `toJSON` methods are implemented for each class. The `js-codex` library solves this
 problem and supports serializaton preparation for all native JavaScript classes and automatically learns custom classes without semantic loss.
 
 # Usage
 
-Here is an example that covers many special JavaScript cases and classes as well as a custom class:
+Here is an example that covers many special JavaScript cases and classes as well as a custom class. `Codex` can encode any
+JavaScript object in a manner that can be stringified, transported, parsed, and decoded back to its original form.
 
 ```
 <script type="module">
@@ -43,6 +44,7 @@ Here is an example that covers many special JavaScript cases and classes as well
 			aDate: new Date(),
 			aBigInt: BigInt("9007199254740991"),
 			aCustomObject: new Person({name:"joe"}),
+			aFunction: Person,
 			aSet: [1,NaN,Infinity,undefined]
 				.reduce((accum,value) => accum.add(value),new Set()),
 			aMap: [["a",1],["b",NaN],["c",Infinity],["d",undefined],[{name:"test"},{name:"test"}]]
@@ -50,13 +52,19 @@ Here is an example that covers many special JavaScript cases and classes as well
 			anInt8Array: Int8Array.from([1,2,3]),
 			aBigInt64Array: BigInt64Array.from([9007199254740991n,"9007199254740991"])
 		};
-	navigator.geolocation.getCurrentPosition(async (location) => {
-		const references = {};
-		data.aGeolocation = location;
-		const encoded = codex.encode(data,{idProperty:"#",references,hiddenProperties:["^"]});
+	if(window.location.href.startsWith("https:") {
+		navigator.geolocation.getCurrentPosition(async (location) => {
+			const references = {};
+			data.aGeolocation = location;
+			const encoded = codex.encode(data,{idProperty:"#",references,hiddenProperties:["^"],functions:true});
+			console.log(encoded);
+			console.log(await codex.decode(JSON.parse(JSON.stringify(encoded)),{references}));
+		});
+	} else {
+		const encoded = codex.encode(data,{idProperty:"#",references,hiddenProperties:["^"],functions:true});
 		console.log(encoded);
-		console.log(await codex.decode(JSON.parse(JSON.stringify(encoded)),{references}));
-	});
+		console.log(await codex.decode(JSON.parse(JSON.stringify(encoded)),{references,functions:true}));
+	}
 </script>
 ```
 
@@ -74,18 +82,18 @@ then you will nned to provide the functions for the Codex to use.
 
 `name` - Classname for which to support encoding and decoding.
 
-`decode` - Optional. Function to decode class. Has the same signature as `decode` below. If not provided an attempt with by made to create
-an instance using a `create` function passed all the decoded data as an `Object`. If no create function can be found, then `Object.create`
-is used with the class prototype and the data is assigned to the instance.
+`decode` - Optional. Function to decode class. Has the same signature as `decode` below. If not provided an attempt with be made to create
+an instance using a `create` function defined as a static member of `ctor` and passed all the decoded data as an `Object`. If no create function 
+can be found, then `Object.create` is used with the class prototype and the data is assigned to the instance.
 
 `create` - Optional. Factory function to create an instance based on a single config object containing all decoded data. May be asynchronous.
-If not provided and needed a search for a factory will be conducted by looking at the class to see if it has a static method `create`.
+If not provided and needed, a search for a factory will be conducted by looking at the `ctor` to see if it has a static method `create`.
 
 `encode` - Optional. Function to encode class instance. Has the same signature as `encode` below. If not provided, a search will be made
 by first looking for an `encode` method on the data passed to `encode` and next for a static method named `encode` on the class of the
 data passed to `encode`.
 
-## encode(data,{idProperty,hiddenProperties=[],references}={})
+## encode(data,{idProperty,hiddenProperties=[],references,functions}={})
 
 Encodes the data so it can be serialized using `JSON.stringify`. Supports circular references so long as the objects referenced have an `idProperty`.
 
@@ -95,9 +103,12 @@ Encodes the data so it can be serialized using `JSON.stringify`. Supports circul
 
 `hiddenProperties` - Optional. An array of hidden, i.e. non-enumerable, property names to include in the encoded data.
 
-`references` - An object, the entries of which will be unique object ids and objects when `encode` returns.
+`references` - If provided at an object when `encode` is invoked, the `references` will have entries consiting of unique object ids and objects when `encode` returns.
 
-## async decode(data,{idProperty,isReference,references}={})
+`functions` - Optional. If `true`, then functions are converetd to strings. Note, functions containing closure scoped variables may fail to operate
+properly when decoded. Also, encoding,, transporting, decoding, and then executing functions has some security risks.
+
+## async decode(data,{idProperty,isReference,references,functions}={})
 
 Decodes data. It is asynchronous because decoding data will frequently require asynchronous retrieval of referenced objects from a database
 based on their ids.
@@ -110,14 +121,19 @@ based on their ids.
 specified with `encode`.
 
 `references` - Either a function or an object. If a function, when passed a unique object id it should return the object. It may be asynchronous. 
-Typically, this will be a database getter. Or, an object, the keys of which are unique object ids and the values are objects to substitute
+Typically, this will be a database getter. Or, an object, the keys of which are unique object ids and the values objects to substitute
 for the ids, e.g. the `references` object populated by `encode`.
+
+`functions` - Optional. If `true`, then functions are restored. Note, functions containing closure scoped variables may fail to operate
+properly when decoded. Also, encoding,, transporting, decoding, and then executing functions has some security risks.
 
 # License
 
 MIT
 
 # Release History (reverse chronologicla order)
+
+2020-03-10 v0.0.6b BETA Added function encoding/decoding. Enhanced documentation.
 
 2020-02-28 v0.0.5a ALPHA Reworked internals to simplify.
 

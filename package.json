@@ -1,7 +1,7 @@
 {
   "name": "js-codex",
   "description": "Encode and decode modern JavaScript, e.g. Map, Set, typed Arrays for JSON.stringify and JSON.parse.",
-  "version": "0.0.5a",
+  "version": "0.0.6b",
   "license": "MIT",
   "contributors": [
     {
@@ -10,12 +10,13 @@
     }
   ],
   "scripts": {
-  	
+    "test": "mocha test/index.js --require esm"
   },
   "devDependencies": {
     "chai": "^4.2.0",
     "codacy-coverage": "^3.4.0",
     "codeclimate-test-reporter": "^0.5.1",
+    "esm": "^3.2.25",
     "mocha": "^7.0.1"
   },
   "dependencies": {},

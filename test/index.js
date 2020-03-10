@@ -1,14 +1,5 @@
-var chai,
-	expect,
-	nanomemoize,
-	Codex;
-if(typeof(window)==="undefined") {
-	chai = require("chai");
-	expect = chai.expect;
-	Codex = require("../index.js").Codex; // does not currentl work, must test from browser
-} else {
-	Codex = window.Codex;
-}
+import { expect } from 'chai';
+import { Codex} from "../index.js";
 
 describe("Test",function() {
 	let codex;
@@ -139,12 +130,13 @@ describe("Test",function() {
 		}
 	});
 	it("URL", async function() {
-		const url = new URL(window.location.href),
+		const href = "http://localhost/test.html?run=1",
+			url = new URL(href),
 			{kind,data}  = codex.encode(url),
 			decoded = await codex.decode({kind,data} );
 		expect(kind).equal("URL");
-		expect(data).equal(window.location.href);
-		expect(decoded.href).equal(window.location.href);
+		expect(data).equal(href);
+		expect(decoded.href).equal(href);
 	});
 	it("Custom Object", async function() {
 		function Person(config={}) {
@@ -168,5 +160,22 @@ describe("Test",function() {
 		expect(decoded["^"].createdAt.getTime()).equal(person["^"].createdAt.getTime());
 		expect(decoded instanceof Person).equal(true);
 		expect(Object.getOwnPropertyDescriptor(decoded,"^").enumerable).equal(false);
+	});
+	it("function", async function() {
+		function Person(config={}) {
+			Object.assign(this,config);
+			Object.defineProperty(this,"^",{value:Object.assign({},config["^"])});
+			if(!this["#"]) {
+				this["#"] = `Person@${Math.random()}`; // good enough for demo
+			}
+			if(!this["^"].createdAt) {
+				this["^"].createdAt = new Date();
+			}
+		};
+		const {kind,data} = codex.encode(Person,{functions:true}),
+			decoded = await codex.decode({kind,data},{functions:true});
+		expect(kind).equal("function");
+		expect(data).equal(Person+"");
+		expect(decoded+"").equal(Person+"");
 	});
 });
