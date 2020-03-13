@@ -1,6 +1,6 @@
 # js-codex
 
-Encode and decode modern JavaScript, e.g. Map, Set, NaN, Infinity, typed Arrays for `JSON.stringify` and `JSON.parse`.
+JSON.stringify/parse, encode, and decode modern JavaScript, e.g. Map, Set, NaN, Infinity, typed Arrays.
 
 `JSON.stringify` and `JSON.parse` are of high utility for serializing JSON data and restoring it for later use. However,
 they were both designed prior to the introduction of a large number of JavaScript objects that do not serialize and
@@ -11,14 +11,14 @@ all of the typed arrays like `Int8Array`.
 `Infinity`, `-Infinity`, `NaN`, `undefined`, functions.
 
 Finally, `JSON.stringify` loses semantic information unless `toJSON` methods are implemented for each class. The `js-codex` library solves this
-problem and supports serializaton preparation for all native JavaScript classes and automatically learns custom classes without semantic loss.
+problem and supports serializaton for all native JavaScript classes and automatically learns custom classes without semantic loss.
 
 # Usage
 
 Here is an example that covers many special JavaScript cases and classes as well as a custom class. `Codex` can encode any
 JavaScript object in a manner that can be stringified, transported, parsed, and decoded back to its original form.
 
-```
+```javascript
 <script type="module">
 	import {Codex} from "../js-codex.js";
 
@@ -67,6 +67,38 @@ JavaScript object in a manner that can be stringified, transported, parsed, and 
 	}
 </script>
 ```
+
+# Using with JSON.stringify and JSON.parse
+
+Just pass in the `js-codex` `replacer()`  and `reviver()` function as the second argument to `JSON.stringify` or `JSON.parse`:
+
+```javascript
+<script type="module">
+	import {Codex} from "../js-codex.js";
+	
+	(async () => {
+		const codex = new Codex(),
+			array = Uint16Array.from([1,2,3]),
+			stringified = JSON.stringify(array,codex.replacer()),
+			parsed = await JSON.parse(stringified,codex.reviver());
+		console.log(array,stringified,parsed);
+	})();
+</script>
+```
+
+Note, `JSON.parse` returns a `Promise` when used with a `js-codex` reviver. This is because the reviver can be configured to use asynchronous 
+calls to restore objects by reference from databases.
+
+# Initializing the Codex
+
+The codex can be configured with a default object id property, a function to identify object ids, a list of hidden/non-enumerable properties 
+(object ids are often non-enumerable), and a collector/restorer for object references.
+
+TO BE WRITTEN
+
+# Using With A Database
+
+TO BE WRITTEN
 
 # API
 
@@ -132,6 +164,8 @@ properly when decoded. Also, encoding,, transporting, decoding, and then executi
 MIT
 
 # Release History (reverse chronologicla order)
+
+2020-03-13 v0.0.7b BETA Added default JSON replacer and reviver. Enhanced documentation.
 
 2020-03-10 v0.0.6b BETA Added function encoding/decoding. Enhanced documentation.
 

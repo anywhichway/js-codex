@@ -1,7 +1,7 @@
 {
   "name": "js-codex",
-  "description": "Encode and decode modern JavaScript, e.g. Map, Set, typed Arrays for JSON.stringify and JSON.parse.",
-  "version": "0.0.6b",
+  "description": "JSON.stringify/parse, encode, and decode modern JavaScript, e.g. Map, Set, NaN, Infinity, typed Arrays.",
+  "version": "0.0.7b",
   "license": "MIT",
   "contributors": [
     {

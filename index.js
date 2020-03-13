@@ -1,8 +1,13 @@
 function reduceArray(accum,item) { accum.push(item); return accum; }
 
-function Codex() {
+function JSCodexEncoded(config) {
+	return Object.assign(this,config);
+}
+
+function Codex({idProperty,references={},functions,hiddenProperties=[]}={}) {
+	const defaults = {idProperty,references,functions,hiddenProperties}
 	if(!(this instanceof Codex)) {
-		return new Codex();
+		return new Codex(defaults);
 	}
 	const codex = this,
 		creators = {},
@@ -11,12 +16,13 @@ function Codex() {
 		decoders = {
 			Array: async (data,options) => data.reduce(async (accum,item) => { accum = await accum; accum.push(await codex.decode(item,options)); return accum; },[]),
 			Boolean: (data) => new Boolean(data),
-			BigInt: (data) => BigInt(data),
+			BigInt: (data) => BigInt(data.substring(0,data.length-1)),
 			BigInt64Array: (data) => BigInt64Array.from(data),
 			BigUint64Array: (data) => BigUint64Array.from(data),
 			Date: (data) => new Date(parseInt(data)),
 			Float32Array: (data) => Float32Array.from(data),
 			Float64Array: (data) => Float64Array.from(data),
+			JSCodexEncoded: (data) => data,
 			function: (data) => Function("return " + data)(),
 			GeolocationCoordinates: (data) => codex.decode(data),
 			GeolocationPosition: (data) => codex.decode(data),
@@ -34,20 +40,21 @@ function Codex() {
 			Uint8Array: (data) => Uint8Array.from(data),
 			Uint8ClampedArray: (data) => Uint8ClampedArray.from(data),
 			Uint16Array: (data) => Uint16Array.from(data),
-			Uint32Array: (data) => Uint16Array.from(data),
+			Uint32Array: (data) => Uint32Array.from(data),
 			URL: (data) => new URL(data),
-			bigint: (data) => data,
+			bigint: (data) => BigInt(data.substring(0,data.length-1)),
 			boolean: (data) => data,
 			number: (data) => data,
 			string: (data) => data,
 			undefined: () => undefined
 		},
 		decodeObject = async ({kind,data},options) => {
-			const {isReference=_isReference,idProperty,hiddenProperties=[],references} = options,
-				ctor = ctors[kind],
-				name = ctor.name;
+			const ctor = ctors[kind];
 			let decoded = {};
-			for(const key of hiddenProperties) {
+			if(data && data.kind===kind) {
+				return decodeObject(data,options);
+			}
+			for(const key of options.hiddenProperties||[]) {
 				decoded[key] = await codex.decode(data[key],options)
 			}
 			for(const key in data) {
@@ -60,18 +67,22 @@ function Codex() {
 				decoded = ctor.create(decoded);
 			} else if(ctor) {
 				decoded = Object.assign(Object.create(ctor.prototype),decoded);
-				hiddenProperties.forEach((key) => {
-					const desc = Object.getOwnPropertyDescriptor(decoded,key);
+				Object.defineProperty(decoded,"constructor",{configurable:true,writable:true,value:ctor});
+			}
+			(options.hiddenProperties||[]).forEach((key) => {
+				const desc = Object.getOwnPropertyDescriptor(decoded,key);
+				try {
 					desc.enumerable = false;
 					Object.defineProperty(decoded,key,desc);
-				});
-			}
+				} catch(e) {
+					
+				}
+			});
 			return decoded;
 		},
 		encodeObject = (object,options) => {
-			const {isReference=_isReference,idProperty,hiddenProperties=[],references} = options,
-				data = {};
-			hiddenProperties.forEach((key) => data[key] = codex.encode(object[key],options));
+			const data = {};
+			(options.hiddenProperties||[]).forEach((key) => data[key] = codex.encode(object[key],options));
 			options = Object.assign({},options);
 			delete options.hiddenProperties;
 			for(const key in object) {
@@ -79,22 +90,23 @@ function Codex() {
 					data[key] = codex.encode(object[key],options);
 				}
 			}
-			const id = object[idProperty];
+			const id = object[options.idProperty];
 			if(id) {
 				if(references[id]) {
-					return {kind:object.constructor.name,data:id}
+					return new JSCodexEncoded({kind:object.constructor.name,data:id});
 				}
-				references[id] = data;
+				return references[id] = new JSCodexEncoded({kind:object.constructor.name,data});
 			}
-			return {kind:object.constructor.name,data}
+			return new JSCodexEncoded({kind:object.constructor.name,data});
 		},
 		encoders = {
 				Array: (data,options) => data.map((item) => codex.encode(item,options)),
 				boolean: (data) => data,
-				bigint: (data) => data,
+				bigint: (data) => `${data}n`,
 				BigInt64Array: (data) => data.reduce((accum,item) => { accum.push(`${item}`); return accum; },[]),
 				BigUint64Array: (data) => data.reduce((accum,item) => { accum.push(`${item}`); return accum; },[]),
 				Date: (data) => data.getTime(),
+				JSCodexEncoded: (data) => data,
 				Float32Array: (data) => data.reduce(reduceArray,[]),
 				Float64Array: (data) => data.reduce(reduceArray,[]),
 				function: (data) => data+"",
@@ -118,8 +130,12 @@ function Codex() {
 				URL: (data) => data.href,
 				undefined: () => undefined
 			};
-	Object.defineProperty(this,"decode",{configurable:true,writable:true,value:async ({kind,data},{isReference=_isReference,idProperty,hiddenProperties=[],references,functions}={}) => {
-		const type = typeof(data),
+	Object.defineProperty(this,"decode",{configurable:true,writable:true,value:async (value,{isReference=_isReference,idProperty=defaults.idProperty,hiddenProperties=defaults.hiddenProperties,references=defaults.references,functions=defaults.functions}={}) => {
+		if(!value || typeof(value)!=="object") {
+			return;
+		}
+		const {kind,data} = value,
+			type = typeof(data),
 			reference = isReference(data),
 			referencestype = typeof(references),
 			ctor = ctors[kind];
@@ -130,7 +146,7 @@ function Codex() {
 			}
 			if(references && referencestype==="object" && references[data]) {
 				decoded = references[data];
-				if(ctor && decoded && typeof(decoded)==="object" && decoded instanceof ctor) {
+				if(ctor && decoded && typeof(decoded)==="object" && (decoded instanceof ctor || decoded instanceof Promise)) {
 					return decoded;
 				}
 			}
@@ -150,33 +166,53 @@ function Codex() {
 			}
 		}
 		if(references && referencestype==="object" && data && type==="object" && idProperty && data[idProperty]) {
-			references[data[idProperty]] = decoded;
+			const id = await this.decode(data[idProperty])
+			references[id] = await decoded;
 		}
 		return decoded;
 	}});
 
-	Object.defineProperty(this,"encode",{configurable:true,writable:true,value:(data,{isReference=_isReference,idProperty,hiddenProperties=[],references,functions}={}) => {
+	Object.defineProperty(this,"encode",{configurable:true,writable:true,value:(data,{isReference=_isReference,idProperty=defaults.idProperty,hiddenProperties=defaults.hiddenProperties,references=defaults.references,functions=defaults.functions}={}) => {
 		if(idProperty && !references) {
 			throw new Error(`call of 'encode' was made with a idProperty="${idProperty}" but no references object`);
-		}
-		if(!idProperty && references) {
-			throw new Error(`call of 'encode' was made with a references object but no idProperty`);
 		}
 		const type = typeof(data),
 			kind = encoders[data] ? data+"" : (data && type==="object" ? data.constructor.name : type);
 		let encoded,
 			encoder = encoders[kind]||(data && type==="object" ? (data.encode ? data.encode.bind(data) : (data.constructor.encode ? data.constructor.encode.bind(data.constructor) : null)) : null);
 		if(encoder && (type!=="function" || functions)) {
-			encoded = {kind,data:encoder(data,{idProperty,hiddenProperties,references})};
+			encoded = new JSCodexEncoded({kind,data:encoder(data,{idProperty,hiddenProperties,references})});
 		} else if(data && type==="object") {
 			// create default decoder and encoder
 			const ctor = ctors[data.constructor.name] = data.constructor,
 				name = ctor.name,
-				decode = async (data) => decodeObject({kind:name,data},{isReference,idProperty,hiddenProperties,references});
+				decode = async (data) => decodeObject({kind:name,data},{isReference,idProperty,hiddenProperties,references,functions});
 			codex.register({ctor,encode:encodeObject,decode});
 			encoded = encodeObject(data,{idProperty,hiddenProperties,references});
 		}
 		return encoded;
+	}});
+	
+	Object.defineProperty(this,"replacer",{configurable:true,writable:true,value:(options) => {
+		options = Object.assign({},defaults,options);
+		Object.keys(references||{}).forEach((key) => delete references[key]);
+		const codex = this;
+		return function(key,value) {
+			value = this[key]||value; // reset value because JSON.strinigy may have already converted built-in objects
+			return JSON.stringify(codex.encode(value,options));
+		}
+	}});
+	
+	Object.defineProperty(this,"reviver",{configurable:true,writable:true,value:(options) => {
+		options = Object.assign({},defaults,options);
+		return (key,value) => {
+			try {
+				value = JSON.parse(value);
+			} catch(e) {
+				return value;
+			}
+			return this.decode(value,options);
+		}
 	}});
 	
 	Object.defineProperty(this,"register",{configurable:true,writable:true,value:({ctor,name=ctor.name,encode,decode,create}) => {

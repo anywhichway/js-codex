@@ -1,0 +1,16 @@
+<html>
+<head>
+</head>
+<body>
+<script type="module">
+	import {Codex} from "../js-codex.js";
+	
+	(async () => {
+		const codex = new Codex(),
+			array = Uint16Array.from([1,2,3]),
+			stringified = JSON.stringify(array,codex.replacer()),
+			parsed = await JSON.parse(stringified,codex.reviver());
+		console.log(array,stringified,parsed);
+	})();
+</script>
+</body></html>
