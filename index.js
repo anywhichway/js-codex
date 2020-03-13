@@ -5,7 +5,7 @@ function JSCodexEncoded(config) {
 }
 
 function Codex({idProperty,references={},functions,hiddenProperties=[]}={}) {
-	const defaults = {idProperty,references,functions,hiddenProperties}
+	const defaults = {idProperty,references,functions,hiddenProperties};
 	if(!(this instanceof Codex)) {
 		return new Codex(defaults);
 	}
@@ -156,7 +156,7 @@ function Codex({idProperty,references={},functions,hiddenProperties=[]}={}) {
 			decoded = await decoder(data,{isReference,hiddenProperties,references});
 		} else {
 			if(data && type==="object") {
-				decoded = Object.keys(data).reduce(async (accum,key) => { accum = await accum; accum[key] = await codex.decode(data[key],{isReference,hiddenProperties,references}); return accum; },Array.isArray(data) ? [] : {})
+				decoded = Object.keys(data).reduce(async (accum,key) => { accum = await accum; accum[key] = await codex.decode(data[key],{isReference,hiddenProperties,references}); return accum; },Array.isArray(data) ? [] : {});
 			} else {
 				decoded = data;
 			}
@@ -166,7 +166,7 @@ function Codex({idProperty,references={},functions,hiddenProperties=[]}={}) {
 			}
 		}
 		if(references && referencestype==="object" && data && type==="object" && idProperty && data[idProperty]) {
-			const id = await this.decode(data[idProperty])
+			const id = await this.decode(data[idProperty]);
 			references[id] = await decoded;
 		}
 		return decoded;
@@ -200,7 +200,7 @@ function Codex({idProperty,references={},functions,hiddenProperties=[]}={}) {
 		return function(key,value) {
 			value = this[key]||value; // reset value because JSON.strinigy may have already converted built-in objects
 			return JSON.stringify(codex.encode(value,options));
-		}
+		};
 	}});
 	
 	Object.defineProperty(this,"reviver",{configurable:true,writable:true,value:(options) => {
@@ -212,7 +212,7 @@ function Codex({idProperty,references={},functions,hiddenProperties=[]}={}) {
 				return value;
 			}
 			return this.decode(value,options);
-		}
+		};
 	}});
 	
 	Object.defineProperty(this,"register",{configurable:true,writable:true,value:({ctor,name=ctor.name,encode,decode,create}) => {

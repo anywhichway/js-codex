@@ -1,4 +1,4 @@
-import {Codex} from "./index.js"
+import {Codex} from "./index.js";
 
 export default Codex;
 export {Codex}
