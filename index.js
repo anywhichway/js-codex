@@ -55,7 +55,7 @@ function Codex({idProperty,references={},functions,hiddenProperties=[]}={}) {
 				return decodeObject(data,options);
 			}
 			for(const key of options.hiddenProperties||[]) {
-				decoded[key] = await codex.decode(data[key],options)
+				decoded[key] = await codex.decode(data[key],options);
 			}
 			for(const key in data) {
 				if(decoded[key]===undefined) {
@@ -71,11 +71,9 @@ function Codex({idProperty,references={},functions,hiddenProperties=[]}={}) {
 			}
 			(options.hiddenProperties||[]).forEach((key) => {
 				const desc = Object.getOwnPropertyDescriptor(decoded,key);
-				try {
+				if(desc.configurable) {
 					desc.enumerable = false;
 					Object.defineProperty(decoded,key,desc);
-				} catch(e) {
-					
 				}
 			});
 			return decoded;

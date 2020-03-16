@@ -13,7 +13,7 @@ all of the typed arrays like `Int8Array`.
 Finally, `JSON.stringify` loses semantic information unless `toJSON` methods are implemented for each class. The `js-codex` library solves this
 problem and supports serializaton for all native JavaScript classes and automatically learns custom classes without semantic loss.
 
-# Usage
+## Usage
 
 Here is an example that covers many special JavaScript cases and classes as well as a custom class. `Codex` can encode any
 JavaScript object in a manner that can be stringified, transported, parsed, and decoded back to its original form.
@@ -68,7 +68,7 @@ JavaScript object in a manner that can be stringified, transported, parsed, and 
 </script>
 ```
 
-# Using with JSON.stringify and JSON.parse
+## Using with JSON.stringify and JSON.parse
 
 Just pass in the `js-codex` `replacer()`  and `reviver()` function as the second argument to `JSON.stringify` or `JSON.parse`:
 
@@ -89,22 +89,22 @@ Just pass in the `js-codex` `replacer()`  and `reviver()` function as the second
 Note, `JSON.parse` returns a `Promise` when used with a `js-codex` reviver. This is because the reviver can be configured to use asynchronous 
 calls to restore objects by reference from databases.
 
-# Initializing the Codex
+## Initializing the Codex
 
 The codex can be configured with a default object id property, a function to identify object ids, a list of hidden/non-enumerable properties 
 (object ids are often non-enumerable), and a collector/restorer for object references.
 
 TO BE WRITTEN
 
-# Using With A Database
+## Using With A Database
 
 TO BE WRITTEN
 
-# API
+## API
 
 The API is presented in order of likely use.
 
-## declare({ctor,name=ctor.name,decode,create,encode})
+### declare({ctor,name=ctor.name,decode,create,encode})
 
 Extends codex to support the named class. The core encoder will automatically learn new classes based on the instances it is passed. If
 the same Codex instance is used for decoding, `declare` will not usually be needed. However, if you are decoding on a remote device,
@@ -125,7 +125,7 @@ If not provided and needed, a search for a factory will be conducted by looking 
 by first looking for an `encode` method on the data passed to `encode` and next for a static method named `encode` on the class of the
 data passed to `encode`.
 
-## encode(data,{idProperty,hiddenProperties=[],references,functions}={})
+### encode(data,{idProperty,hiddenProperties=[],references,functions}={})
 
 Encodes the data so it can be serialized using `JSON.stringify`. Supports circular references so long as the objects referenced have an `idProperty`.
 
@@ -140,7 +140,7 @@ Encodes the data so it can be serialized using `JSON.stringify`. Supports circul
 `functions` - Optional. If `true`, then functions are converetd to strings. Note, functions containing closure scoped variables may fail to operate
 properly when decoded. Also, encoding,, transporting, decoding, and then executing functions has some security risks.
 
-## async decode(data,{idProperty,isReference,references,functions}={})
+### async decode(data,{idProperty,isReference,references,functions}={})
 
 Decodes data. It is asynchronous because decoding data will frequently require asynchronous retrieval of referenced objects from a database
 based on their ids.
@@ -159,11 +159,11 @@ for the ids, e.g. the `references` object populated by `encode`.
 `functions` - Optional. If `true`, then functions are restored. Note, functions containing closure scoped variables may fail to operate
 properly when decoded. Also, encoding,, transporting, decoding, and then executing functions has some security risks.
 
-# License
+## License
 
 MIT
 
-# Release History (reverse chronologicla order)
+## Release History (reverse chronologicla order)
 
 2020-03-13 v0.0.7b BETA Added default JSON replacer and reviver. Enhanced documentation.
 
