@@ -178,5 +178,3 @@ MIT
 2020-02-16 v0.0.2a ALPHA Corrected typo in declare function signature.
 
 2020-02-16 v0.0.1a ALPHA Initial public release
-
-

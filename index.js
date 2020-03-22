@@ -85,7 +85,7 @@ function Codex({idProperty,references={},functions,hiddenProperties=[]}={}) {
 				if(encoded!==undefined) {
 					data[key] = encoded;
 				}
-			})
+			});
 			options = Object.assign({},options);
 			delete options.hiddenProperties;
 			for(const key in object) {
@@ -132,29 +132,33 @@ function Codex({idProperty,references={},functions,hiddenProperties=[]}={}) {
 				Uint32Array: (data) => data.reduce(reduceArray,[]),
 				URL: (data) => data.href,
 				undefined: () => undefined
-			};
+			},
+		getCreator = (kind) => creators[kind]||(ctors[kind] ? ctors[kind].create : null),
+		getDecoder = (kind,data) => decoders[kind]||(data && typeof(data)==="object" ? (data.decode ? data.decode.bind(data) : (data.constructor.decode ? data.constructor.decode.bind(data.constructor) : null)) : null),
+		getFromReference = (data,references) => {
+			const referencestype = typeof(references);
+			if(referencestype==="function") {
+				return references(data);
+			}
+			if(references && referencestype==="object" && references[data]) {
+				return references[data];
+			}
+		};
+	
 	Object.defineProperty(this,"decode",{configurable:true,writable:true,value:async (value,{isReference=_isReference,idProperty=defaults.idProperty,hiddenProperties=defaults.hiddenProperties,references=defaults.references,functions=defaults.functions}={}) => {
 		if(!value || typeof(value)!=="object") {
 			return;
 		}
 		const {kind,data} = value,
-			type = typeof(data),
-			reference = isReference(data),
-			referencestype = typeof(references),
-			ctor = ctors[kind];
+			type = typeof(data);
 		let decoded;
-		if(reference) {
-			if(referencestype==="function") {
-				return references(data);
-			}
-			if(references && referencestype==="object" && references[data]) {
-				decoded = references[data];
-				if(ctor && decoded && typeof(decoded)==="object" && (decoded instanceof ctor || decoded instanceof Promise)) {
-					return decoded;
-				}
+		if(isReference(data) && references) {
+			decoded = getFromReference(data);
+			if(decoded) {
+				return decoded;
 			}
 		}
-		const decoder = decoders[kind]||(data && type==="object" ? (data.decode ? data.decode.bind(data) : (data.constructor.decode ? data.constructor.decode.bind(data.constructor) : null)) : null);
+		const decoder = getDecoder(kind,data);
 		if(decoder && (kind!=="function" || functions)) {
 			decoded = await decoder(data,{isReference,hiddenProperties,references});
 		} else {
@@ -163,12 +167,12 @@ function Codex({idProperty,references={},functions,hiddenProperties=[]}={}) {
 			} else {
 				decoded = data;
 			}
-			const create = creators[kind]||(ctor ? ctor.create : null);
-			if(create) {
-				decoded = create(decoded);
+			const creator = getCreator(kind);
+			if(creator) {
+				decoded = creator(decoded);
 			}
 		}
-		if(references && referencestype==="object" && data && type==="object" && idProperty && data[idProperty]) {
+		if(references && typeof(references)==="object" && data && type==="object" && idProperty && data[idProperty]) {
 			const id = await this.decode(data[idProperty]);
 			references[id] = await decoded;
 		}
