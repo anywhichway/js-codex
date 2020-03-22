@@ -80,7 +80,12 @@ function Codex({idProperty,references={},functions,hiddenProperties=[]}={}) {
 		},
 		encodeObject = (object,options) => {
 			const data = {};
-			(options.hiddenProperties||[]).forEach((key) => data[key] = codex.encode(object[key],options));
+			(options.hiddenProperties||[]).forEach((key) => { 
+				const encoded =  codex.encode(object[key],options); 
+				if(encoded!==undefined) {
+					data[key] = encoded;
+				}
+			})
 			options = Object.assign({},options);
 			delete options.hiddenProperties;
 			for(const key in object) {
@@ -182,10 +187,13 @@ function Codex({idProperty,references={},functions,hiddenProperties=[]}={}) {
 			encoded = new JSCodexEncoded({kind,data:encoder(data,{idProperty,hiddenProperties,references})});
 		} else if(data && type==="object") {
 			// create default decoder and encoder
-			const ctor = ctors[data.constructor.name] = data.constructor,
-				name = ctor.name,
-				decode = async (data) => decodeObject({kind:name,data},{isReference,idProperty,hiddenProperties,references,functions});
-			codex.register({ctor,encode:encodeObject,decode});
+			if(!decoders[kind]) {
+				const ctor = ctors[data.constructor.name] = data.constructor;
+				decoders[kind] = async (data) => decodeObject({kind:ctor.name,data},{isReference,idProperty,hiddenProperties,references,functions});
+			}
+			if(!encoders[kind]) {
+				encoders[kind] = encodeObject;
+			}
 			encoded = encodeObject(data,{idProperty,hiddenProperties,references});
 		}
 		return encoded;
@@ -213,11 +221,19 @@ function Codex({idProperty,references={},functions,hiddenProperties=[]}={}) {
 		};
 	}});
 	
-	Object.defineProperty(this,"register",{configurable:true,writable:true,value:({ctor,name=ctor.name,encode,decode,create}) => {
-		ctors[name] = ctor;
-		encoders[name] = encode;
-		decoders[name] = decode;
-		creators[name] = create;
+	Object.defineProperty(this,"register",{configurable:true,writable:true,value:({ctor,name=ctor.name,encode=ctor ? ctor.encode : undefined,decode=ctor ? ctor.decode : undefined,create=ctor ? ctor.create : undefined}) => {
+		if(ctor) {
+			ctors[name] = ctor;
+		}
+		if(encode) {
+			encoders[name] = encode;
+		}
+		if(encode) {
+			decoders[name] = decode;
+		}
+		if(create) {
+			creators[name] = create;
+		}
 	}});
 	
 	

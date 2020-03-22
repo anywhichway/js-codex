@@ -12,13 +12,35 @@ describe("Test",function() {
 			this["^"].createdAt = new Date();
 		}
 	};
+	function Created(config={}) {
+		Object.assign(this,config);
+		Object.defineProperty(this,"^",{value:Object.assign({},config["^"])});
+		if(!this["#"]) {
+			this["#"] = `Created@${Math.random()}`; // good enough for demo
+		}
+		if(!this["^"].createdAt) {
+			this["^"].createdAt = new Date();
+		}
+	};
+	Created.create = function(config) {
+		return new Created(config);
+	};
+	function Decodeable(config={}) {
+		Object.assign(this,config);
+	};
+	Decodeable.create = function(config) {
+		return new Decodeable(config);
+	};
 	let codex,
 		replacer,
-		reviver;
+		reviver,
+		simplecodex;
 	before(() => {
 		codex = new Codex({idProperty:"#",references:{},functions:true,hiddenProperties:["^"]});
 		replacer = codex.replacer();
 		reviver = codex.reviver();
+		simplecodex = new Codex();
+		simplecodex.register({name:"Decodeable",create:Decodeable.create})
 	});
 	it("boolean - false", async function() {
 		const {kind,data} = codex.encode(false),
@@ -293,6 +315,10 @@ describe("Test",function() {
 		expect(parsed).instanceOf(URL);
 		expect(parsed.href).equal(href);
 	});
+	it("Custom Decode", async function() {
+		const decoded = await simplecodex.decode({kind:"Decodeable",data:{}});
+		expect(decoded instanceof Decodeable).equal(true);
+	});
 	it("Custom Object", async function() {
 		const person = new Person({name:"joe"}),
 			references = {},
@@ -320,7 +346,21 @@ describe("Test",function() {
 		expect(parsed).instanceOf(Person);
 		expect(Object.getOwnPropertyDescriptor(parsed,"^").enumerable).equal(false);
 	});
-	it("function", async function() {
+	it("Custom Created  - (JSON.stringify)", async function() {
+		const created = new Created({name:"joe"}),
+			references = {},
+			hiddenProperties = ["^"],
+			idProperty = "#",
+			stringified = JSON.stringify(created,replacer),
+			{kind,data} = JSON.parse(JSON.parse(stringified)),
+			parsed = await JSON.parse(stringified,reviver);
+		expect(kind).equal("Created");
+		expect(parsed["#"]).equal(created["#"]);
+		expect(parsed["^"].createdAt.getTime()).equal(created["^"].createdAt.getTime());
+		expect(parsed).instanceOf(Created);
+		expect(Object.getOwnPropertyDescriptor(parsed,"^").enumerable).equal(false);
+	});
+	it("function - encode/decode", async function() {
 		const {kind,data} = codex.encode(Person,{functions:true}),
 			decoded = await codex.decode({kind,data},{functions:true});
 		expect(kind).equal("function");

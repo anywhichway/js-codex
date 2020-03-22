@@ -1,7 +1,7 @@
 {
   "name": "js-codex",
   "description": "JSON.stringify/parse, encode, and decode modern JavaScript, e.g. Map, Set, NaN, Infinity, typed Arrays.",
-  "version": "0.0.7b",
+  "version": "0.0.8b",
   "license": "MIT",
   "contributors": [
     {
@@ -10,9 +10,14 @@
     }
   ],
   "scripts": {
-    "test": "mocha test/index.js --require esm"
+    "test": "_mocha test/index.js --require esm",
+    "coverage": "c8 npm run test"
+  },
+  "esm": {
+    "cjs": true
   },
   "devDependencies": {
+    "c8": "^7.1.0",
     "chai": "^4.2.0",
     "codacy-coverage": "^3.4.0",
     "codeclimate-test-reporter": "^0.5.1",
