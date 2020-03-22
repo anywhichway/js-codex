@@ -11,7 +11,7 @@
   ],
   "scripts": {
     "test": "mocha test/index.js --require esm",
-    "coverage": "c8 --reporter lcov --report-dir ./ npm run test"
+    "coverage": "c8 --reporter lcov npm run test"
   },
   "esm": {
     "cjs": true

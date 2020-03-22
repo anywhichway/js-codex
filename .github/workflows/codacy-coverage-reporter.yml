@@ -5,7 +5,7 @@ on: ["push"]
 jobs:
   codacy-coverage-reporter:
     runs-on: ubuntu-latest
-    name: codacy-coverage-reporter
+    name: codacy-coverage-reporter -r ./coverage/lcov.info
     steps:
       - uses: actions/checkout@master
       - name: Run codacy-coverage-reporter
