@@ -1,5 +1,5 @@
-import { expect } from 'chai';
-import { Codex} from "../index.js";
+import {expect} from "chai";
+import {Codex} from "../index.js";
 
 describe("Test",function() {
 	function Person(config={}) {

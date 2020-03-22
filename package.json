@@ -10,16 +10,20 @@
     }
   ],
   "scripts": {
-    "test": "_mocha test/index.js --require esm",
-    "coverage": "c8 npm run test"
+    "test": "mocha test/index.js --require esm",
+    "coverage": "c8 --reporter lcov npm run test"
   },
   "esm": {
     "cjs": true
   },
+  "config": {
+    "blanket": {
+      "pattern": "*.js"
+    }
+  },
   "devDependencies": {
     "c8": "^7.1.0",
     "chai": "^4.2.0",
-    "codacy-coverage": "^3.4.0",
     "codeclimate-test-reporter": "^0.5.1",
     "esm": "^3.2.25",
     "mocha": "^7.0.1"
