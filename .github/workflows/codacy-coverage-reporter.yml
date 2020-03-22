@@ -12,3 +12,4 @@ jobs:
         uses: mrfyda/codacy-coverage-reporter-action@master
         with:
           project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
+	  report: coverage/lcov.info
