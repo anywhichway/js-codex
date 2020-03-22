@@ -1,5 +1,7 @@
 # js-codex
 
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/5e05f60a1d7441de960b67acdb94b785)](https://app.codacy.com/manual/syblackwell/js-codex?utm_source=github.com&utm_medium=referral&utm_content=anywhichway/js-codex&utm_campaign=Badge_Grade_Dashboard)
+
 JSON.stringify/parse, encode, and decode modern JavaScript, e.g. Map, Set, NaN, Infinity, typed Arrays.
 
 `JSON.stringify` and `JSON.parse` are of high utility for serializing JSON data and restoring it for later use. However,
